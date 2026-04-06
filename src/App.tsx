@@ -627,7 +627,7 @@ export default function App() {
       } else if (error.code === 'auth/cancelled-by-user') {
         setAuthError('Sign-in was cancelled. Please try again.');
       } else if (error.code === 'auth/unauthorized-domain') {
-        setAuthError('This domain is not authorized for sign-in. Please add it to the Firebase Console.');
+        setAuthError(`This domain (${window.location.hostname}) is not authorized for sign-in. Please add it to the Firebase Console.`);
       } else {
         setAuthError(`Auth Error (${error.code}): ${error.message}`);
         console.error("Auth error:", error);
