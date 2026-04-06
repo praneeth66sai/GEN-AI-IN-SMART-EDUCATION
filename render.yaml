@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: smartedu-architect
+    env: node
+    plan: free
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: GROQ_API_KEY
+        sync: false
