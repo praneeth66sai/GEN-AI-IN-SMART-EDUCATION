@@ -626,8 +626,10 @@ export default function App() {
         setAuthError('Sign-in popup was closed before completion. Please try again.');
       } else if (error.code === 'auth/cancelled-by-user') {
         setAuthError('Sign-in was cancelled. Please try again.');
+      } else if (error.code === 'auth/unauthorized-domain') {
+        setAuthError('This domain is not authorized for sign-in. Please add it to the Firebase Console.');
       } else {
-        setAuthError('An error occurred during sign-in. Please try again.');
+        setAuthError(`Auth Error (${error.code}): ${error.message}`);
         console.error("Auth error:", error);
       }
     }
