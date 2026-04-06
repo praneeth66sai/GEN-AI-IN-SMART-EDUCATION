@@ -157,6 +157,7 @@ export default function App() {
   const [showShareModal, setShowShareModal] = useState(false);
   const [sharedArtifact, setSharedArtifact] = useState<Artifact | null>(null);
   const [isPublicView, setIsPublicView] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
   
   const scrollRef = useRef<HTMLDivElement>(null);
 
@@ -616,6 +617,22 @@ export default function App() {
     }
   };
 
+  const handleSignIn = async () => {
+    setAuthError(null);
+    try {
+      await signInWithGoogle();
+    } catch (error: any) {
+      if (error.code === 'auth/popup-closed-by-user') {
+        setAuthError('Sign-in popup was closed before completion. Please try again.');
+      } else if (error.code === 'auth/cancelled-by-user') {
+        setAuthError('Sign-in was cancelled. Please try again.');
+      } else {
+        setAuthError('An error occurred during sign-in. Please try again.');
+        console.error("Auth error:", error);
+      }
+    }
+  };
+
   if (!isAuthReady) {
     return (
       <div className="h-screen w-full flex items-center justify-center bg-gray-50">
@@ -639,8 +656,19 @@ export default function App() {
             <h1 className="text-3xl font-black tracking-tight text-gray-900">Welcome to PlanFlow</h1>
             <p className="text-gray-500 font-medium">The AI architect for higher education curriculum.</p>
           </div>
+          
+          {authError && (
+            <motion.div 
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              className="p-3 bg-red-50 border border-red-100 rounded-xl text-[10px] font-bold text-red-600 leading-relaxed"
+            >
+              {authError}
+            </motion.div>
+          )}
+
           <button 
-            onClick={signInWithGoogle}
+            onClick={handleSignIn}
             className="w-full py-4 bg-white border border-gray-200 rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-gray-50 transition-all shadow-sm group"
           >
             <img src="https://www.google.com/favicon.ico" className="w-5 h-5 group-hover:scale-110 transition-transform" alt="Google" />
