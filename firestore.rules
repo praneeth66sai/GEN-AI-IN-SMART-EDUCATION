@@ -1,0 +1,101 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId}
+    // Fields:
+    //   - uid: string (required) - The unique identifier for the user.
+    //   - email: string (required, email) - The user's email address.
+    //   - displayName: string (optional) - The user's display name.
+    //   - photoURL: string (optional, uri) - The user's profile picture URL.
+    //   - createdAt: timestamp (optional) - When the user account was created.
+    //
+    // Collection: artifacts
+    // Document ID: {artifactId}
+    // Fields:
+    //   - id: string (required) - The unique identifier for the artifact.
+    //   - userId: string (required) - The UID of the owner.
+    //   - type: string (required, enum) - lesson-plan, academic-year, roadmap, daily-schedule
+    //   - topic: string (required)
+    //   - courseCode: string (optional)
+    //   - program: string (optional)
+    //   - sessionsPerWeek: string (optional)
+    //   - sessionDays: list (optional)
+    //   - startDate: string (optional, date)
+    //   - endDate: string (optional, date)
+    //   - content: string (required)
+    //   - syllabusContext: string (optional)
+    //   - teachingMethods: list (optional)
+    //   - timestamp: number (required)
+    //   - isPublic: boolean (optional) - Whether the artifact is shared publicly.
+    //
+    // ===============================================================
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isDocOwner() {
+      return isAuthenticated() && request.auth.uid == resource.data.userId;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isValidUrl(url) {
+      return url is string && (url.matches("^https://.*") || url.matches("^http://.*"));
+    }
+
+    // Domain Validators
+    
+    function isValidUser(data) {
+      return data.uid is string && data.uid.size() > 0 &&
+             data.email is string && isValidEmail(data.email) &&
+             (!('displayName' in data) || (data.displayName is string && data.displayName.size() < 100)) &&
+             (!('photoURL' in data) || isValidUrl(data.photoURL));
+    }
+
+    function isValidArtifact(data) {
+      let validTypes = ['lesson-plan', 'academic-year', 'roadmap', 'daily-schedule'];
+      return data.id is string && data.id.size() > 0 &&
+             data.userId is string && data.userId == request.auth.uid &&
+             data.type in validTypes &&
+             data.topic is string && data.topic.size() > 0 && data.topic.size() < 500 &&
+             data.content is string && data.content.size() > 0 && data.content.size() < 100000 &&
+             data.timestamp is number &&
+             (!('isPublic' in data) || data.isPublic is bool) &&
+             (!('teachingMethods' in data) || data.teachingMethods is list) &&
+             (!('sessionDays' in data) || data.sessionDays is list);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{userId} {
+      allow read: if isOwner(userId);
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+    }
+
+    match /artifacts/{artifactId} {
+      allow read: if isDocOwner() || (resource.data.isPublic == true);
+      allow create: if isAuthenticated() && isValidArtifact(request.resource.data);
+      allow update: if isDocOwner() && isValidArtifact(request.resource.data);
+      allow delete: if isDocOwner();
+    }
+  }
+}

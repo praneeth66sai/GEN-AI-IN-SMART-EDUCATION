@@ -1,0 +1,50 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile information.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The unique identifier for the user." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "photoURL": { "type": "string", "format": "uri", "description": "The user's profile picture URL." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the user account was created." }
+      },
+      "required": ["uid", "email"]
+    },
+    "Artifact": {
+      "title": "Artifact",
+      "description": "A generated teaching artifact.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "The unique identifier for the artifact." },
+        "userId": { "type": "string", "description": "The UID of the owner." },
+        "type": { "type": "string", "enum": ["lesson-plan", "academic-year", "roadmap", "daily-schedule"] },
+        "topic": { "type": "string" },
+        "courseCode": { "type": "string" },
+        "program": { "type": "string" },
+        "sessionsPerWeek": { "type": "string" },
+        "sessionDays": { "type": "array", "items": { "type": "string" } },
+        "startDate": { "type": "string", "format": "date" },
+        "endDate": { "type": "string", "format": "date" },
+        "content": { "type": "string" },
+        "syllabusContext": { "type": "string" },
+        "teachingMethods": { "type": "array", "items": { "type": "string" } },
+        "timestamp": { "type": "number" },
+        "isPublic": { "type": "boolean", "description": "Whether the artifact is shared publicly." }
+      },
+      "required": ["id", "userId", "type", "topic", "content", "timestamp"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": "User",
+      "description": "User profile documents."
+    },
+    "/artifacts/{artifactId}": {
+      "schema": "Artifact",
+      "description": "Generated teaching artifacts."
+    }
+  }
+}
