@@ -408,8 +408,10 @@ export default function App() {
       const data = await response.json();
       const content = data.content || "Failed to generate content.";
       
-      const updatedArtifact = { ...artifact, content, timestamp: Date.now() };
-      setArtifacts(artifacts.map(a => a.id === artifact.id ? updatedArtifact : a));
+      await updateDoc(doc(db, 'artifacts', artifact.id), { 
+        content, 
+        timestamp: Date.now() 
+      });
     } catch (error: any) {
       console.error("Regeneration error:", error);
       alert(`An error occurred: ${error.message}`);
@@ -528,10 +530,10 @@ export default function App() {
         program: program,
         sessionsPerWeek: sessionsPerWeek,
         sessionDays: sessionDays,
-        startDate: startDate || undefined,
-        endDate: endDate || undefined,
+        startDate: startDate || null,
+        endDate: endDate || null,
         content: content,
-        syllabusContext: syllabusContent || undefined,
+        syllabusContext: syllabusContent || null,
         teachingMethods: teachingMethods,
         timestamp: Date.now(),
         isPublic: false
